@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>ログイン</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="login-container">
+
+    <h1>ログイン</h1>
+
+    <div class="card">
+    
+    <!-- エラー表示-->
+        {% if error %}
+        <p style="color:red;">{{ error }}</p>
+        {% endif %}
+
+        <form method="post">
+            <input type="text" name="username" placeholder="ユーザー名" required>
+            <br>
+            <input type="password" name="password" placeholder="パスワード" required>
+            <button class="btn-main">ログイン</button>
+        </form>
+
+        <br>
+
+        <!-- 新規登録 -->
+        <div style="margin-top: 10px;">
+            <a href="/register" class="btn-sub">新規登録</a>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

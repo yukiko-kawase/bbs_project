@@ -1,0 +1,146 @@
+body{
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
+            margin: 0;
+            padding: 20px;
+        } 
+        h1,h2 {
+            text-align: center;
+        } 
+
+        .container {
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .login-container {
+            max-width: 500px;
+            margin: 80px auto;
+        }
+
+        .login-container input {
+            width: 100%;
+            height: 40px;
+            margin: 10px 0;
+            display: block;
+        }
+
+        .login-container button {
+            width: 100%;
+            margin: 15px 0;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0,0.1);
+        }
+
+        .container input,
+        .container textarea {
+            width: 100%;
+        }
+
+
+        button {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        /* 投稿 */
+        .btn-post {
+            background: #4CAF50;
+            color: white;
+        }
+        /* いいね */
+        .btn-like {
+            background: #3498db;
+            color: white;
+            width: 85px;
+            height: 36px;
+            font-size: 14;
+            display: flex;
+            align-items: center;
+            justify-content: center;;
+        }
+
+        .btn-like.active {
+            background-color: #aaa;
+        }
+
+        /* 削除ボタン */
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+            width: 70px;
+            height: 36px;
+            font-size: 14;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .post {
+            border-bottom: 1px solid #eee;
+            padding: 15px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        /* 本文エリア */
+        .post-content {
+            width: 70%;
+            word-break: break-word;
+        }
+        /* ボタン */
+        .post-actions {
+            width: 180;
+            display: flex;
+            gap: 8px;
+            min-width: 180px;
+            justify-content: flex-end;
+        }
+
+        /* 投稿時間 */
+        .time {
+            font-size: 12px;
+            color: gray;
+        }
+
+        /* ログアウトボタン */
+        .btn-logout {
+            background: #e0e0e0;
+            color: #333;
+            padding: 5px 10px;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        /* ログインボタン */
+        .btn-main {
+            background-color: #28a745;
+            color: white;
+            width: 100%;
+            padding: 10px;
+        }
+
+        /* 新規登録ボタン */
+        .btn-sub {
+            display: block;
+            text-align: center;
+            background-color: #d0d0d0;
+            color: #333;
+            padding: 10px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-top: 10px;
+        }
+        /* カーソルにのせたら色が濃くなる */
+        .btn-sub:hover {
+            background-color: #c0c0c0;
+        }
+
+
