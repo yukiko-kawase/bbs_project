@@ -1,0 +1,10 @@
+<h2>投稿を編集</h2>
+
+{% if error %}
+<p style="color:red;">{{ error }}</p>
+{% endif %}
+
+<form method="POST">
+  <textarea name="message" maxlength="300">{{ post[2] }}</textarea><br>
+  <button type="submit">更新</button>
+</form>

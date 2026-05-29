@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf8">
     <title>掲示板</title>
-    <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}"
+    <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">
 </head>
 
 <body>
@@ -23,6 +23,9 @@
 {% endif %}
 
 <div class="card">
+{% if error %}
+<p style="color:red; margin-bottom: 10px;">{{ error }}</p>
+{% endif %}
 <form action="/post" method="post">
     <!-- <input name="name" placeholder="名前" required> -->
     <textarea name="message" placeholder="メッセージ" maxlength="300" required></textarea>
@@ -46,23 +49,24 @@
 
         <div class="post-actions">
             <!-- いいね -->
-            <form action="/like/{{ post[0] }}" method="post" style="display:inline;">
-                
+            <form action="/like/{{ post[0] }}" method="post" class="like-action">
                 {% if post[6] %}
-                    <button class="btn-like active">👍 済み</button>
+                    <button class="btn-like active">👍 {{ post[4] }}</button>
                 {% else %}
                     <button class="btn-like">👍 {{ post[4] }}</button>
                 {% endif %}
-
             </form>
 
-            <!--削除ボタン(自分の投稿だけ)-->
             {% if session['user_id'] == post[1] %}
-            <form action="/delete/{{ post[0] }}" method="post">
-                <button class="btn-delete"
-                    onclick="return confirm('本当に削除しますか？')">削除
-                </button>
-            </form>
+            <div class="post-controls">
+                <!-- 編集ボタン -->
+                <a href="/edit/{{ post[0] }}" class="btn-edit">編集</a>
+
+                <!-- 削除ボタン -->
+                <form action="/delete/{{ post[0] }}" method="post">
+                    <button class="btn-delete" onclick="return confirm('本当に削除しますか？')">削除</button>
+                </form>
+            </div>
             {% endif %}
         </div>
     </div>

@@ -22,6 +22,9 @@ app.secret_key = 'secret-key'
 
 # データベース初期化
 def init_db():
+    """
+    データベース（bbs.db）を初期化し、posts, users, likesテーブルが存在しない場合は作成する。
+    """
     #  データベースファイルに接続　無ければ新しく作る
     conn = sqlite3.connect('bbs.db')
     cursor = conn.cursor()
@@ -61,6 +64,67 @@ def init_db():
     conn.close()
 # 起動時に1回実行
 init_db()
+
+# 入力チェック
+# 以下の関数は、フォームから送られてきた入力を確かめます。
+# 問題があればエラーメッセージを返し、問題なければ None を返します。
+
+def validate_username(username):
+    # username に値が入っていない場合
+    if username is None:
+        return "ユーザー名を入力してください"
+
+    # 前後のスペースを削除して、実際の文字だけを確認します
+    username = username.strip()
+
+    # 空文字の場合はエラー
+    if username == "":
+        return "ユーザー名を入力してください"
+
+    # 文字数が少なすぎる、または多すぎる場合はエラー
+    if len(username) < 3 or len(username) > 20:
+        return "ユーザー名は3〜20文字で入力してください"
+
+    # ユーザー名にスペースや改行などの空白文字が入っている場合はエラー
+    if any(c.isspace() for c in username):
+        return "ユーザー名に空白文字は使えません"
+
+    # ここまで問題がなければ、エラーなしとして None を返します
+    return None
+
+
+def validate_password(password):
+    # password に値が入っていない場合
+    if password is None or password == "":
+        return "パスワードを入力してください"
+
+    # パスワードが短すぎる場合はエラー
+    if len(password) < 6:
+        return "パスワードは6文字以上で入力してください"
+
+    # パスワードが長すぎる場合もエラー
+    if len(password) > 64:
+        return "パスワードは64文字以下にしてください"
+
+    # OK のときは None を返します
+    return None
+
+
+def validate_message(message):
+    # message に値が入っていない場合
+    if message is None:
+        return "メッセージを入力してください"
+
+    # スペースだけのメッセージも NG
+    if message.strip() == "":
+        return "メッセージを入力してください"
+
+    # 長すぎるメッセージは NG
+    if len(message) > 300:
+        return "メッセージは300文字以内で入力してください"
+
+    # 問題がなければ None を返します
+    return None
 
 # 投稿日時表示機能
 def time_ago(created_at):
@@ -111,7 +175,7 @@ def index():
     # データベースから投稿データを全部取得する
     raw_posts = cursor.fetchall()
     conn.close()
-    print("session user:", session['user_id'])
+    error = request.args.get('error')
     # 新しく空のリストを作る
     posts = []
     #  1件ずつ取り出して処理する
@@ -123,7 +187,7 @@ def index():
         # 加工したデータをリストに追加
         posts.append((id, user_id, message, time_text, likes, username,liked))
     # HTMLにデータを渡す
-    return render_template('index.html', posts=posts)
+    return render_template('index.html', posts=posts, error=error)
 
 # ログイン機能
 @app.route('/login', methods=['GET', 'POST'])
@@ -131,6 +195,11 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+
+        # ログイン時は username と password がどちらも必要
+        if not username or not password:
+            return render_template('login.html', error="ユーザー名とパスワードを入力してください")
+
         conn = sqlite3.connect('bbs.db')
         cursor = conn.cursor()
 
@@ -155,10 +224,16 @@ def register():
     error = ""
 
     if request.method == 'POST':
-        username = request.form['username']
-        print("username:", "[" + username + "]")
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
 
-        password = request.form['password']
+        # 登録時はユーザー名とパスワードを検証
+        error = validate_username(username)
+        if error is None:
+            error = validate_password(password)
+
+        if error is not None:
+            return render_template('register.html', error=error)
 
         # パスワードをハッシュ化
         hashed = generate_password_hash(password)
@@ -191,7 +266,12 @@ def post():
     
     user_id = session['user_id']
     # HTMLのinputから値を取る
-    message = request.form['message']
+    message = request.form.get('message', '')
+
+    # 投稿内容の検証: 空白のみや長すぎるメッセージを禁止
+    error = validate_message(message)
+    if error is not None:
+        return redirect(url_for('index', error=error))
 
     conn = sqlite3.connect('bbs.db')
     cursor = conn.cursor()
@@ -209,6 +289,66 @@ def post():
 
     return redirect('/')
 
+# 投稿編集処理
+# ここは、投稿を編集するためのページを表示したり、編集内容を保存したりする場所です。
+@app.route('/edit/<int:post_id>', methods=['GET', 'POST'])
+def edit(post_id):
+    # まずログインしているか確認します。ログインしていないならログインページへ戻します。
+    if 'user_id' not in session:
+        return redirect('/login')
+
+    conn = sqlite3.connect('bbs.db')
+    cursor = conn.cursor()
+
+    # フォームの送信(method=POST)で編集内容を保存します。
+    if request.method == 'POST':
+        # フォームから投稿内容を取得します。
+        message = request.form.get('message', '')
+
+        # 投稿の内容が正しいか確認します。
+        error = validate_message(message)
+        if error is not None:
+            # エラーがあれば、元の投稿内容をもう一度DBから読み込みます。
+            cursor.execute(
+                'SELECT * FROM posts WHERE id = ? AND user_id = ?',
+                (post_id, session['user_id'])
+            )
+            post = cursor.fetchone()
+            conn.close()
+
+            # 投稿が見つからない場合はトップに戻します。
+            if post is None:
+                return redirect('/')
+
+            # エラーメッセージを編集ページに表示します。
+            return render_template('edit.html', post=post, error=error)
+
+        # エラーがなければ、投稿内容を更新します。
+        cursor.execute(
+            'UPDATE posts SET message = ? WHERE id = ? AND user_id = ?',
+            (message, post_id, session['user_id'])
+        )
+        conn.commit()
+        conn.close()
+
+        # 更新後はトップページに戻します。
+        return redirect('/')
+
+    # GET の場合は編集ページを表示します。
+    cursor.execute(
+        'SELECT * FROM posts WHERE id = ? AND user_id = ?',
+        (post_id, session['user_id'])
+    )
+    post = cursor.fetchone()
+    conn.close()
+
+    # 自分の投稿が見つからなければトップに戻します。
+    if post is None:
+        return redirect('/')
+
+    # 編集ページに投稿内容を渡します。
+    return render_template('edit.html', post=post, error=None)
+
 # 削除処理
 @app.route('/delete/<int:post_id>', methods=['POST'])
 def delete(post_id):
@@ -222,7 +362,7 @@ def delete(post_id):
 
     # 自分の投稿だけ削除
     cursor.execute('DELETE FROM posts WHERE id = ? AND user_id = ?',
-                   (post_id,session['user_id']))
+                   (post_id, session['user_id']))
     
     conn.commit()
     conn.close()
